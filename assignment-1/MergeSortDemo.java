@@ -1,31 +1,37 @@
-import java.util.*;
-
 public class MergeSortDemo {
+    private static final int CUTOFF = 32;
 
-    public static void mergeSort(int[] arr) {
-        if (arr.length <= 1) return;
-        int mid = arr.length / 2;
-        int[] left = Arrays.copyOfRange(arr, 0, mid);
-        int[] right = Arrays.copyOfRange(arr, mid, arr.length);
-        mergeSort(left);
-        mergeSort(right);
-        merge(arr, left, right);
+    public static void mergeSort(int[] a) {
+        int[] buf = new int[a.length];
+        mergeSort(a, buf, 0, a.length);
     }
 
-    private static void merge(int[] arr, int[] left, int[] right) {
-        int i = 0, j = 0, k = 0;
-        while (i < left.length && j < right.length) {
-            if (left[i] <= right[j]) arr[k++] = left[i++];
-            else arr[k++] = right[j++];
+    private static void mergeSort(int[] a, int[] buf, int lo, int hi) {
+        if (hi - lo <= CUTOFF) {
+            insertionSort(a, lo, hi);
+            return;
         }
-        while (i < left.length) arr[k++] = left[i++];
-        while (j < right.length) arr[k++] = right[j++];
+        int mid = (lo + hi) >>> 1;
+        mergeSort(a, buf, lo, mid);
+        mergeSort(a, buf, mid, hi);
+        merge(a, buf, lo, mid, hi);
     }
 
-    public static void main(String[] args) {
-        int[] arr = {5, 2, 9, 1, 5, 6};
-        System.out.println("Before: " + Arrays.toString(arr));
-        mergeSort(arr);
-        System.out.println("After:  " + Arrays.toString(arr));
+    private static void merge(int[] a, int[] buf, int lo, int mid, int hi) {
+        int i = lo, j = mid, k = lo;
+        while (i < mid && j < hi)
+            buf[k++] = (a[i] <= a[j]) ? a[i++] : a[j++];
+        while (i < mid) buf[k++] = a[i++];
+        while (j < hi) buf[k++] = a[j++];
+        System.arraycopy(buf, lo, a, lo, hi - lo);
+    }
+
+    private static void insertionSort(int[] a, int lo, int hi) {
+        for (int i = lo + 1; i < hi; i++) {
+            int key = a[i];
+            int j = i - 1;
+            while (j >= lo && a[j] > key) a[j + 1] = a[j--];
+            a[j + 1] = key;
+        }
     }
 }
