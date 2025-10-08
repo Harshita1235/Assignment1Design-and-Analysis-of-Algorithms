@@ -1,37 +1,43 @@
-import java.util.*;
+static double closestPair(Point[] pts) {
+    Point[] ptsSortedByX = pts.clone();
+    Arrays.sort(ptsSortedByX, Comparator.comparingDouble(p -> p.x));
+    Point[] ptsSortedByY = pts.clone();
+    Arrays.sort(ptsSortedByY, Comparator.comparingDouble(p -> p.y));
+    return closestPairRec(ptsSortedByX, ptsSortedByY);
+}
 
-public class ClosestPairDemo {
+private static double closestPairRec(Point[] X, Point[] Y) {
+    int n = X.length;
+    if (n <= 3) return bruteForce(X);  // base case
 
-    static class Point {
-        double x, y;
-        Point(double x, double y) { this.x = x; this.y = y; }
-        @Override public String toString() { return "(" + x + "," + y + ")"; }
+    int mid = n / 2;
+    double midX = X[mid].x;
+
+    Point[] XL = Arrays.copyOfRange(X, 0, mid);
+    Point[] XR = Arrays.copyOfRange(X, mid, n);
+
+    // Split Y according to midX
+    List<Point> YL = new ArrayList<>();
+    List<Point> YR = new ArrayList<>();
+    for (Point p : Y) {
+        if (p.x <= midX) YL.add(p);
+        else YR.add(p);
     }
 
-    public static double closestPair(Point[] pts) {
-        double best = Double.MAX_VALUE;
-        for (int i = 0; i < pts.length; i++) {
-            for (int j = i + 1; j < pts.length; j++) {
-                double d = dist(pts[i], pts[j]);
-                if (d < best) best = d;
-            }
+    double dl = closestPairRec(XL, YL.toArray(Point[]::new));
+    double dr = closestPairRec(XR, YR.toArray(Point[]::new));
+    double d = Math.min(dl, dr);
+
+    // Build strip
+    List<Point> strip = new ArrayList<>();
+    for (Point p : Y) if (Math.abs(p.x - midX) < d) strip.add(p);
+
+    // Check up to 7 neighbors in strip
+    for (int i = 0; i < strip.size(); i++) {
+        for (int j = i + 1; j < strip.size() && (strip.get(j).y - strip.get(i).y) < d; j++) {
+            double dist = dist(strip.get(i), strip.get(j));
+            if (dist < d) d = dist;
         }
-        return best;
     }
-
-    private static double dist(Point a, Point b) {
-        double dx = a.x - b.x, dy = a.y - b.y;
-        return Math.sqrt(dx*dx + dy*dy);
-    }
-
-    public static void main(String[] args) {
-        Point[] pts = {
-            new Point(2, 3), new Point(12, 30),
-            new Point(40, 50), new Point(5, 1),
-            new Point(12, 10), new Point(3, 4)
-        };
-        System.out.println("Points: " + Arrays.toString(pts));
-        double result = closestPair(pts);
-        System.out.println("Closest distance = " + result);
-    }
+    return d;
 }
